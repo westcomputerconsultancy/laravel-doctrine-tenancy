@@ -1,5 +1,5 @@
 {
-    "name": "somnambulist/laravel-doctrine-tenancy",
+    "name": "westcomputerconsultancy/laravel-doctrine-tenancy",
     "type": "library",
     "description": "A multi-tenancy implementation that uses Laravel and Doctrine.",
     "keywords": [
