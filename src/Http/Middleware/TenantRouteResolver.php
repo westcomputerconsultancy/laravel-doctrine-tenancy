@@ -7,9 +7,11 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Route;
 use RuntimeException;
 use Somnambulist\Tenancy\Contracts\DomainAwareTenantParticipant;
 use Somnambulist\Tenancy\Contracts\Tenant;
+
 use function array_unique;
 use function base_path;
 
@@ -67,7 +69,6 @@ class TenantRouteResolver extends ServiceProvider
      */
     protected $namespace;
 
-
     /**
      * Constructor.
      *
@@ -79,7 +80,6 @@ class TenantRouteResolver extends ServiceProvider
     public function __construct(Application $app)
     {
         parent::__construct($app);
-
         $this->namespace = $app->make('config')->get('tenancy.multi_site.router.namespace', 'App\Http\Controllers');
     }
 
@@ -98,6 +98,7 @@ class TenantRouteResolver extends ServiceProvider
         return $next($request);
     }
 
+
     /**
      * Define your route model bindings, pattern filters, etc.
      *
@@ -109,7 +110,13 @@ class TenantRouteResolver extends ServiceProvider
             $this->app->make('router')->pattern($name, $pattern);
         }
 
-        parent::boot();
+        if ($this->routesAreCached()) {
+            $this->loadCachedRoutes();
+        } else {
+            $this->app->call([$this, 'map']);
+            $this->app['router']->getRoutes()->refreshNameLookups();
+            $this->app['router']->getRoutes()->refreshActionLookups();
+        }
     }
 
     /**
@@ -121,12 +128,14 @@ class TenantRouteResolver extends ServiceProvider
      */
     public function map(Router $router)
     {
+        //xdebug_break();
+
         /** @var Tenant $tenant */
         $tenant = $this->app->make('auth.tenant');
         $router->group(
-            ['namespace' => $this->namespace],
+            [],
             function ($router) use ($tenant) {
-                $tries    = ['routes', 'web',];
+                $tries = ['routes', 'web',];
                 $failures = [];
 
                 if ($tenant->getTenantOwner() instanceof DomainAwareTenantParticipant) {
@@ -143,7 +152,9 @@ class TenantRouteResolver extends ServiceProvider
                         $path = base_path(sprintf('%s/%s.php', $folder, $file));
 
                         if (file_exists($path)) {
-                            require_once $path;
+
+                            Route::middleware([])
+                            ->group($path);
 
                             return;
                         }
