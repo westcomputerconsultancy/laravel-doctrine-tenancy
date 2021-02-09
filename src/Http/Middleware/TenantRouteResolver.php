@@ -133,7 +133,7 @@ class TenantRouteResolver extends ServiceProvider
         /** @var Tenant $tenant */
         $tenant = $this->app->make('auth.tenant');
         $router->group(
-            [],
+            ['namespace' => $this->namespace],
             function ($router) use ($tenant) {
                 $tries = ['routes', 'web',];
                 $failures = [];
