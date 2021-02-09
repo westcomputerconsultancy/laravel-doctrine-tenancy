@@ -152,10 +152,7 @@ class TenantRouteResolver extends ServiceProvider
                         $path = base_path(sprintf('%s/%s.php', $folder, $file));
 
                         if (file_exists($path)) {
-
-                            Route::middleware([])
-                            ->group($path);
-
+                            require $path;
                             return;
                         }
 
